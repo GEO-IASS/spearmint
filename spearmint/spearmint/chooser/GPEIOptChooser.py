@@ -268,23 +268,21 @@ class GPEIOptChooser:
 
             # This is old code to optimize each point in parallel. Uncomment
             # and replace if multiprocessing doesn't work
-            #for i in xrange(0, cand2.shape[0]):
-            #    log("Optimizing candidate %d/%d" %
-            #                     (i+1, cand2.shape[0]))
-            #self.check_grad_ei(cand2[i,:].flatten(), comp, pend, vals)
-            #    ret = spo.fmin_l_bfgs_b(self.grad_optimize_ei_over_hypers,
-            #                            cand2[i,:].flatten(), args=(comp,pend,vals),
-            #                            bounds=b, disp=0)
-            #    cand2[i,:] = ret[0]
-            #cand = np.vstack((cand, cand2))
+            for i in xrange(0, cand2.shape[0]):
+                log("Optimizing candidate %d/%d" % (i+1, cand2.shape[0]))
+                self.check_grad_ei(cand2[i,:].flatten(), comp, pend, vals)
+                ret = spo.fmin_l_bfgs_b(self.grad_optimize_ei_over_hypers, cand2[i,:].flatten(),
+                                        args=(comp, pend, vals), bounds=b, disp=0)
+                cand2[i,:] = ret[0]
+            cand = np.vstack((cand, cand2))
 
             # Optimize each point in parallel
-            pool = multiprocessing.Pool(self.grid_subset)
-            results = [pool.apply_async(optimize_pt,args=(
-                        c,b,comp,pend,vals,copy.copy(self))) for c in cand2]
-            for res in results:
-                cand = np.vstack((cand, res.get(1e8)))
-            pool.close()
+            # pool = multiprocessing.Pool(self.grid_subset)
+            # results = [pool.apply_async(optimize_pt,args=(
+            #             c,b,comp,pend,vals,copy.copy(self))) for c in cand2]
+            # for res in results:
+            #     cand = np.vstack((cand, res.get(1e8)))
+            # pool.close()
 
             overall_ei = self.ei_over_hypers(comp,pend,cand,vals)
             best_cand = np.argmax(np.mean(overall_ei, axis=1))
